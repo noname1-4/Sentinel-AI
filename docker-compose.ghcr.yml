@@ -1,0 +1,51 @@
+version: "3.8"
+
+x-python-environment: &python-environment
+  SENTINEL_CONFIG: /app/config.yaml
+  SENTINEL_SQLITE_PATH: /app/data/sentinel.db
+  SENTINEL_ACTIVE_LLM: openai
+  SENTINEL_ACTIVE_CHANNELS: telegram
+  SENTINEL_POLL_INTERVAL_SECONDS: "300"
+  PYTHONUNBUFFERED: "1"
+  OPENAI_API_KEY: "PASTE_OPENAI_KEY"
+  ANTHROPIC_API_KEY: ""
+  GEMINI_API_KEY: ""
+  GROQ_API_KEY: ""
+  TELEGRAM_BOT_TOKEN: "PASTE_TELEGRAM_BOT_TOKEN"
+  TELEGRAM_CHAT_ID: "PASTE_TELEGRAM_CHAT_ID"
+  DISCORD_WEBHOOK_URL: ""
+  WHATSAPP_WEBHOOK_URL: ""
+  WHATSAPP_BEARER_TOKEN: ""
+
+services:
+  sentinel-bot:
+    image: ghcr.io/noname1-4/sentinel-ai-python:latest
+    container_name: sentinel-bot
+    environment:
+      <<: *python-environment
+    command: ["macro-sentinel", "--config", "/app/config.yaml", "--loop"]
+    volumes:
+      - /DATA/AppData/sentinel-ai-v2/data:/app/data
+      - /DATA/AppData/sentinel-ai-v2/logs:/app/logs
+    restart: unless-stopped
+
+  sentinel-api:
+    image: ghcr.io/noname1-4/sentinel-ai-python:latest
+    container_name: sentinel-api
+    environment:
+      <<: *python-environment
+      SENTINEL_CORS_ORIGINS: http://IP_SERVER:8080
+    command: ["uvicorn", "macro_sentinel.api:app", "--host", "0.0.0.0", "--port", "8000"]
+    volumes:
+      - /DATA/AppData/sentinel-ai-v2/data:/app/data
+      - /DATA/AppData/sentinel-ai-v2/logs:/app/logs
+    restart: unless-stopped
+
+  sentinel-ui:
+    image: ghcr.io/noname1-4/sentinel-ai-ui:latest
+    container_name: sentinel-ui
+    depends_on:
+      - sentinel-api
+    ports:
+      - "8080:80"
+    restart: unless-stopped
