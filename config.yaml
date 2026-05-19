@@ -1,0 +1,94 @@
+Language: vi
+Active_LLM: openai
+Active_Channels:
+  - telegram
+
+runtime:
+  poll_interval_seconds: 300
+  log_level: INFO
+  log_file: logs/macro.log
+
+storage:
+  sqlite_path: data/sentinel.db
+
+fetch:
+  request_timeout_seconds: 20
+  concurrent_requests: 8
+  max_entries_per_source: 20
+  max_articles_per_run: 10
+  fetch_article_text: false
+  max_article_chars: 6000
+  mark_failed_as_processed: false
+  user_agent: Macro-Sentinel/1.0 (+https://example.local/macro-sentinel)
+
+llm:
+  temperature: 0.2
+  min_output_tokens: 350
+  max_output_tokens: 700
+  providers:
+    openai:
+      model: gpt-4o-mini
+      api_key_env: OPENAI_API_KEY
+      timeout_seconds: 30
+    anthropic:
+      model: claude-3-5-sonnet-20241022
+      api_key_env: ANTHROPIC_API_KEY
+      timeout_seconds: 30
+    gemini:
+      model: gemini-1.5-flash
+      api_key_env: GEMINI_API_KEY
+      timeout_seconds: 30
+    groq:
+      model: llama3-70b-8192
+      api_key_env: GROQ_API_KEY
+      timeout_seconds: 30
+
+channels:
+  telegram:
+    bot_token_env: TELEGRAM_BOT_TOKEN
+    chat_id_env: TELEGRAM_CHAT_ID
+  discord:
+    webhook_url_env: DISCORD_WEBHOOK_URL
+    username: Macro-Sentinel
+  whatsapp:
+    dry_run: true
+    provider: generic_webhook
+    webhook_url_env: WHATSAPP_WEBHOOK_URL
+    bearer_token_env: WHATSAPP_BEARER_TOKEN
+
+Sources:
+  - name: Reuters Business & Finance
+    url: https://www.reutersagency.com/feed/?best-topics=business-finance&post_type=best
+    type: rss
+    category: macro
+    enabled: true
+  - name: Bloomberg Markets
+    url: https://feeds.bloomberg.com/markets/news.rss
+    type: rss
+    category: macro
+    enabled: true
+  - name: CoinDesk
+    url: https://www.coindesk.com/arc/outboundfeeds/rss/
+    type: rss
+    category: crypto
+    enabled: true
+  - name: CoinTelegraph
+    url: https://cointelegraph.com/rss
+    type: rss
+    category: crypto
+    enabled: true
+  - name: CafeF Stock Market
+    url: https://cafef.vn/thi-truong-chung-khoan.rss
+    type: rss
+    category: vietnam
+    enabled: true
+  - name: World Bank News
+    url: https://www.worldbank.org/en/news/all?format=rss
+    type: rss
+    category: macro
+    enabled: true
+  - name: IMF News
+    url: https://www.imf.org/en/News/RSS
+    type: rss
+    category: macro
+    enabled: true

@@ -1,0 +1,49 @@
+[tool.poetry]
+name = "macro-sentinel"
+version = "0.2.0"
+description = "A token-efficient macroeconomic and crypto news analysis bot with multi-LLM and multi-channel support."
+authors = ["Macro-Sentinel Maintainers <maintainers@example.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{ include = "macro_sentinel", from = "src" }]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<4.0"
+aiohttp = "^3.9.5"
+anthropic = "^0.34.2"
+beautifulsoup4 = "^4.12.3"
+fastapi = "^0.112.0"
+feedparser = "^6.0.11"
+google-generativeai = "^0.7.2"
+groq = "^0.9.0"
+loguru = "^0.7.2"
+openai = "^1.40.0"
+pyyaml = "^6.0.2"
+tenacity = "^8.5.0"
+uvicorn = { extras = ["standard"], version = "^0.30.6" }
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.2"
+pytest-asyncio = "^0.23.8"
+ruff = "^0.6.2"
+
+[tool.poetry.scripts]
+macro-sentinel = "macro_sentinel.app:main"
+
+[build-system]
+requires = ["poetry-core>=1.9.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+src = ["src", "tests"]
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["ASYNC", "B", "E", "F", "I", "UP"]
+ignore = ["B904"]
