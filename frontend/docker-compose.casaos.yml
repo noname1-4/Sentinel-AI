@@ -1,0 +1,67 @@
+version: "3.8"
+
+x-python-environment: &python-environment
+  SENTINEL_CONFIG: /app/config.yaml
+  SENTINEL_SQLITE_PATH: /app/data/sentinel.db
+  SENTINEL_ACTIVE_LLM: ${SENTINEL_ACTIVE_LLM:-openai}
+  SENTINEL_ACTIVE_CHANNELS: ${SENTINEL_ACTIVE_CHANNELS:-telegram}
+  SENTINEL_POLL_INTERVAL_SECONDS: ${SENTINEL_POLL_INTERVAL_SECONDS:-300}
+  SENTINEL_CORS_ORIGINS: ${SENTINEL_CORS_ORIGINS:-http://localhost:8080}
+  PYTHONUNBUFFERED: "1"
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+  GROQ_API_KEY: ${GROQ_API_KEY:-}
+  TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+  TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+  DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
+  WHATSAPP_WEBHOOK_URL: ${WHATSAPP_WEBHOOK_URL:-}
+  WHATSAPP_BEARER_TOKEN: ${WHATSAPP_BEARER_TOKEN:-}
+
+services:
+  sentinel-bot:
+    image: sentinel-ai-v2-python:latest
+    build:
+      context: https://github.com/noname1-4/REPLACE_WITH_REPO_NAME.git#main
+      dockerfile: Dockerfile
+      target: python-runtime
+    container_name: sentinel-bot
+    environment:
+      <<: *python-environment
+    command: ["macro-sentinel", "--config", "/app/config.yaml", "--loop"]
+    volumes:
+      - sentinel_data:/app/data
+      - sentinel_logs:/app/logs
+    restart: unless-stopped
+
+  sentinel-api:
+    image: sentinel-ai-v2-python:latest
+    build:
+      context: https://github.com/noname1-4/REPLACE_WITH_REPO_NAME.git#main
+      dockerfile: Dockerfile
+      target: python-runtime
+    container_name: sentinel-api
+    environment:
+      <<: *python-environment
+    command: ["uvicorn", "macro_sentinel.api:app", "--host", "0.0.0.0", "--port", "8000"]
+    volumes:
+      - sentinel_data:/app/data
+      - sentinel_logs:/app/logs
+    restart: unless-stopped
+
+  sentinel-ui:
+    image: sentinel-ai-v2-ui:latest
+    build:
+      context: https://github.com/noname1-4/REPLACE_WITH_REPO_NAME.git#main
+      dockerfile: Dockerfile
+      target: ui-runtime
+    container_name: sentinel-ui
+    depends_on:
+      - sentinel-api
+    ports:
+      - "${SENTINEL_UI_PORT:-8080}:80"
+    restart: unless-stopped
+
+volumes:
+  sentinel_data:
+  sentinel_logs:
