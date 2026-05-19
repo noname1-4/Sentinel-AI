@@ -12,6 +12,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
+  ALL_IN_ONE_IMAGE: ghcr.io/noname1-4/sentinel-ai
   PYTHON_IMAGE: ghcr.io/noname1-4/sentinel-ai-python
   UI_IMAGE: ghcr.io/noname1-4/sentinel-ai-ui
 
@@ -42,6 +43,17 @@ jobs:
           tags: |
             ${{ env.PYTHON_IMAGE }}:latest
             ${{ env.PYTHON_IMAGE }}:${{ github.sha }}
+
+      - name: Build and push all-in-one runtime
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          target: all-in-one-runtime
+          push: true
+          tags: |
+            ${{ env.ALL_IN_ONE_IMAGE }}:latest
+            ${{ env.ALL_IN_ONE_IMAGE }}:${{ github.sha }}
 
       - name: Build and push UI runtime
         uses: docker/build-push-action@v6

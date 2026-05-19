@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  sentinel-ai:
+    image: ghcr.io/noname1-4/sentinel-ai:latest
+    container_name: sentinel-ai
+    environment:
+      SENTINEL_CONFIG: /app/config.yaml
+      SENTINEL_SQLITE_PATH: /app/data/sentinel.db
+      SENTINEL_RUN_BOT_IN_API: "1"
+      SENTINEL_ACTIVE_LLM: openai
+      SENTINEL_ACTIVE_CHANNELS: telegram
+      SENTINEL_POLL_INTERVAL_SECONDS: "300"
+      SENTINEL_CORS_ORIGINS: http://IP_SERVER:8080
+      PYTHONUNBUFFERED: "1"
+      OPENAI_API_KEY: "PASTE_OPENAI_KEY"
+      ANTHROPIC_API_KEY: ""
+      GEMINI_API_KEY: ""
+      GROQ_API_KEY: ""
+      TELEGRAM_BOT_TOKEN: "PASTE_TELEGRAM_BOT_TOKEN"
+      TELEGRAM_CHAT_ID: "PASTE_TELEGRAM_CHAT_ID"
+      DISCORD_WEBHOOK_URL: ""
+      WHATSAPP_WEBHOOK_URL: ""
+      WHATSAPP_BEARER_TOKEN: ""
+    ports:
+      - "8080:8000"
+    volumes:
+      - /DATA/AppData/sentinel-ai-v2/data:/app/data
+      - /DATA/AppData/sentinel-ai-v2/logs:/app/logs
+    restart: unless-stopped

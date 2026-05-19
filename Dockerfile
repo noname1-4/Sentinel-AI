@@ -64,3 +64,15 @@ COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=frontend-builder /frontend/dist /usr/share/nginx/html
 
 EXPOSE 80
+
+
+FROM python-runtime AS all-in-one-runtime
+
+ENV SENTINEL_STATIC_DIR=/app/static \
+    SENTINEL_RUN_BOT_IN_API=1
+
+COPY --from=frontend-builder /frontend/dist /app/static
+
+EXPOSE 8000
+
+CMD ["uvicorn", "macro_sentinel.api:app", "--host", "0.0.0.0", "--port", "8000"]

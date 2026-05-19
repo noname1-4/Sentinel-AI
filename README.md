@@ -172,6 +172,9 @@ Replace every `REPLACE_WITH_REPO_NAME` in that file with your GitHub repository 
 If the panel does not support Compose builds, use `docker-compose.ghcr.yml` after GitHub Actions publishes the
 images to GHCR. That file pulls prebuilt images instead of building locally.
 
+For CasaOS/manual app installers that only handle one web container cleanly, use `docker-compose.casaos-single.yml`.
+It runs the bot loop, FastAPI API, and React UI in one container on host port `8080`.
+
 For SSH-based installs, run this on a Linux server after replacing the repository URL:
 
 ```bash
