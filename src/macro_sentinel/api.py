@@ -1,27 +1,43 @@
 from __future__ import annotations
 
+import asyncio
 import os
 import sqlite3
 from contextlib import asynccontextmanager
+from contextlib import suppress
 from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
+from macro_sentinel.app import run_loop
 from macro_sentinel.core.config import load_config
 from macro_sentinel.fetchers import ProcessedURLStore
 from macro_sentinel.models import AppConfig, ConfigurationError
 
 
 DEFAULT_CONFIG_PATH = "/app/config.yaml"
+DEFAULT_STATIC_DIR = "/app/static"
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    config = _load_config()
+    config_path = _config_path()
+    config = load_config(config_path)
     await ProcessedURLStore(config.storage_path).initialize()
-    yield
+    bot_task = None
+    if _run_bot_in_api():
+        bot_task = asyncio.create_task(run_loop(config_path))
+
+    try:
+        yield
+    finally:
+        if bot_task:
+            bot_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await bot_task
 
 
 app = FastAPI(
@@ -154,7 +170,11 @@ def read_articles(
 
 
 def _load_config() -> AppConfig:
-    return load_config(os.getenv("SENTINEL_CONFIG", DEFAULT_CONFIG_PATH))
+    return load_config(_config_path())
+
+
+def _config_path() -> str:
+    return os.getenv("SENTINEL_CONFIG", DEFAULT_CONFIG_PATH)
 
 
 def _load_config_or_500() -> AppConfig:
@@ -189,3 +209,16 @@ def _is_missing_table(exc: sqlite3.OperationalError) -> bool:
 def _cors_origins() -> list[str]:
     origins = os.getenv("SENTINEL_CORS_ORIGINS", "http://localhost:8080,http://localhost:5173")
     return [origin.strip() for origin in origins.split(",") if origin.strip()]
+
+
+def _run_bot_in_api() -> bool:
+    return os.getenv("SENTINEL_RUN_BOT_IN_API", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _mount_static_app() -> None:
+    static_dir = Path(os.getenv("SENTINEL_STATIC_DIR", DEFAULT_STATIC_DIR))
+    if static_dir.exists():
+        app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+
+
+_mount_static_app()
