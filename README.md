@@ -162,6 +162,30 @@ Docker Compose mounts persistent folders:
 - `./data:/app/data` for `data/sentinel.db` SQLite deduplication state.
 - `./logs:/app/logs` for rotating Loguru files.
 
+## One-command Server Install
+
+For CasaOS or panels that install directly from a Compose file, use `docker-compose.casaos.yml`.
+It does not require a local checkout because Docker builds from the GitHub URL in `build.context`.
+
+Replace every `REPLACE_WITH_REPO_NAME` in that file with your GitHub repository name before importing it.
+
+If the panel does not support Compose builds, use `docker-compose.ghcr.yml` after GitHub Actions publishes the
+images to GHCR. That file pulls prebuilt images instead of building locally.
+
+For SSH-based installs, run this on a Linux server after replacing the repository URL:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/USER/REPO/main/scripts/install.sh | REPO_URL=https://github.com/USER/REPO.git bash
+```
+
+The first run creates `.env` and stops so you can add API keys. Edit it:
+
+```bash
+nano ~/sentinel-ai-v2/.env
+```
+
+Then run the same install command again to build and start the containers.
+
 ## Internal Networking
 
 All services join the private Docker bridge network `sentinel-net`. The UI container is the only service exposed to the host through port `8080`. Browser requests to `/api/*` go to nginx in `sentinel-ui`, then nginx forwards them internally to `http://sentinel-api:8000`.
