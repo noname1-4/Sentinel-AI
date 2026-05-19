@@ -52,9 +52,16 @@ def load_config(path: str | Path = "config.yaml") -> AppConfig:
         raw = yaml.safe_load(handle) or {}
 
     config_dir = config_path.parent
-    language = str(_get(raw, "Language", "language", default="vi")).lower()
-    active_llm = str(_get(raw, "Active_LLM", "active_llm", default="openai")).lower()
-    active_channels = _as_string_list(_get(raw, "Active_Channels", "active_channels", default=[]))
+    language = str(os.getenv("SENTINEL_LANGUAGE") or _get(raw, "Language", "language", default="vi")).lower()
+    active_llm = str(
+        os.getenv("SENTINEL_ACTIVE_LLM") or _get(raw, "Active_LLM", "active_llm", default="openai")
+    ).lower()
+    active_channels_raw = os.getenv("SENTINEL_ACTIVE_CHANNELS")
+    active_channels = _as_string_list(
+        active_channels_raw
+        if active_channels_raw is not None
+        else _get(raw, "Active_Channels", "active_channels", default=[])
+    )
 
     if language not in SUPPORTED_LANGUAGES:
         raise ConfigurationError(f"Unsupported language '{language}'. Supported: {sorted(SUPPORTED_LANGUAGES)}")
@@ -70,7 +77,9 @@ def load_config(path: str | Path = "config.yaml") -> AppConfig:
         raise ConfigurationError("At least one source must be configured under Sources.")
 
     storage_raw = _get(raw, "storage", "Storage", default={}) or {}
-    storage_path = str(storage_raw.get("sqlite_path", "data/processed_articles.sqlite3"))
+    storage_path = str(
+        os.getenv("SENTINEL_SQLITE_PATH") or storage_raw.get("sqlite_path", "data/processed_articles.sqlite3")
+    )
     storage_path = _resolve_path(storage_path, config_dir)
 
     fetch_raw = _get(raw, "fetch", "Fetch", default={}) or {}
@@ -88,6 +97,8 @@ def load_config(path: str | Path = "config.yaml") -> AppConfig:
     llm_settings = _parse_llm_settings(_get(raw, "llm", "LLM", default={}) or {})
     channels = _get(raw, "channels", "Channels", default={}) or {}
     runtime = _get(raw, "runtime", "Runtime", default={}) or {}
+    if os.getenv("SENTINEL_POLL_INTERVAL_SECONDS"):
+        runtime["poll_interval_seconds"] = int(os.environ["SENTINEL_POLL_INTERVAL_SECONDS"])
 
     return AppConfig(
         language=language,
